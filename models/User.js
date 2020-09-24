@@ -37,7 +37,7 @@ const User = db.define('user', {
 });
 
 User.associate = (models) => {
-    User.hasMany(models.Course);
+    User.hasMany(models.Course, {foreignKey: 'userid'});
 };
 
 module.exports = User;

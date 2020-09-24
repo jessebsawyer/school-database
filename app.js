@@ -19,6 +19,9 @@ const app = express();
 // setup morgan which gives us http request logging
 app.use(morgan('dev'));
 
+//
+app.use(express.json());
+
 // TODO setup your api routes here
 app.use('/api', require('./routes/api'));
 

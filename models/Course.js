@@ -30,7 +30,7 @@ const Course = db.define('course', {
 })
 
 Course.associate = (models) => {
-    Course.belongsTo(models.User);
+    Course.belongsTo(models.User, {foreignKey: 'userid'});
 };
 
 module.exports = Course;
