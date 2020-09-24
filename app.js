@@ -10,16 +10,21 @@ const enableGlobalErrorLogging = process.env.ENABLE_GLOBAL_ERROR_LOGGING === 'tr
 
 // Test Database
 db.authenticate()
-    .then(() => console.log('database connected...'))
-    .catch(err => console.log(`Error: ${err}`))
+.then(console.log('database connected...'))
+.catch(err => console.log(`Error: ${err}`))
 
-// create the Express app
+// Sync Database    
+db.sync()
+.then(console.log('Syncing Database'))
+.catch(err => console.log(`Error: ${err}`))
+
+// Create the Express app
 const app = express();
 
-// setup morgan which gives us http request logging
+// Setup morgan which gives us http request logging
 app.use(morgan('dev'));
 
-//
+// Allow Access to req.body
 app.use(express.json());
 
 // TODO setup your api routes here
