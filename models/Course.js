@@ -1,5 +1,6 @@
 const Sequelize = require('sequelize');
 const db = require('../config/database');
+const User = require('./User');
 
 const Course = db.define('course', {
     title: {
@@ -27,5 +28,9 @@ const Course = db.define('course', {
     
 
 })
+
+Course.associate = (models) => {
+    Course.belongsTo(models.User);
+};
 
 module.exports = Course;

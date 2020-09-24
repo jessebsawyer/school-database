@@ -3,9 +3,15 @@
 // load modules
 const express = require('express');
 const morgan = require('morgan');
+const db = require('./config/database')
 
 // variable to enable global error logging
 const enableGlobalErrorLogging = process.env.ENABLE_GLOBAL_ERROR_LOGGING === 'true';
+
+// Test Database
+db.authenticate()
+    .then(() => console.log('database connected...'))
+    .catch(err => console.log(`Error: ${err}`))
 
 // create the Express app
 const app = express();
@@ -14,6 +20,7 @@ const app = express();
 app.use(morgan('dev'));
 
 // TODO setup your api routes here
+app.use('/api', require('./routes/api'));
 
 // setup a friendly greeting for the root route
 app.get('/', (req, res) => {

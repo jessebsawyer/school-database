@@ -36,4 +36,8 @@ const User = db.define('user', {
     }
 });
 
+User.associate = (models) => {
+    User.hasMany(models.Course);
+};
+
 module.exports = User;
