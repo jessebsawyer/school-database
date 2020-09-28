@@ -1,88 +1,65 @@
 // Require Varibles
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
-const User = require('../models/User');
-const Course = require('../models/Course');
+const { Course, User } = require('../models');
 const bcryptjs = require('bcryptjs');
 const auth = require('basic-auth');
-const {check, validationResult} = require('express-validator');
 
-const authenticateUser = (req, res, next) => {
+const authenticateUser = async (req, res, next) => {
     let message = null;
     const credentials = auth(req);
-
     if (credentials) {
-        User.findAll()
-            .then(user => {
-                user.emailAddress === credentials.name
-                if (user) {
-                    const authenticated = bcryptjs
-                        .compareSync(credentials.pass, user.password);
-                    if (authenticated) {
-                        console.log(`Authentication successful for username: ${user.emailAddress}`);
-                        req.currentUser = user;
-                    } else {
-                        message = `Authentication failure for email: ${user.emailAddress}`;
-                    }
-                } else {
-                    message = `User not found for email: ${credentials.name}`;
-                }
-            });
-            
+        const user = await User.findAll({
+            where: {
+                emailAddress: credentials.name
+            }
+        });
+        if (user) {
+            const authenticated = bcryptjs
+            .compareSync(credentials.pass, user.password);
+            if (authenticated) {
+                console.log(`Authentication successful for ${user.firstName}, ${user.lastName}.`);
+                req.currentUser = user;
+            } else {
+                message = `Authentication failure for username: ${user.emailAddress}`;
+            }
+        } else {
+            message = `User not found for username: ${credentials.name}`;
+        }
     } else {
-        message = `Auth header not found`;
+        message = 'Auth header not found';
     }
-
+    
+    // If user authentication failed...
     if (message) {
-        console.warn(message);
-        res.status(401).json({message: 'Access Denied'});
-    } else {
-        next();
-    }
+    console.warn(message);
 
-}
+    // Return a response with a 401 Unauthorized HTTP status code.
+    res.status(401).json({ message: 'Access Denied' });
+  } else {
+    // Or if user authentication succeeded...
+    // Call the next() method.
+    next();
+  }  
+};
 
-// Show All Users
+// Show Authenticated User
 router.get('/users', authenticateUser, (req, res) => {
     const user = req.currentUser;
 
     res.json({
-        firstName: user.firstName,
-        lastName: user.lastName,
-        emailAddress: user.emailAddress,
-        password: user.password
-
+        name: user.name,
+        username: user.username
     });
 });
 
 // Create User
-router.post('/users', [
-    check('firstName')
-    .exists({ checkNull: true, checkFalsy: true })
-    .withMessage('Please provide a value for "firstName"'),
-  check('lastName')
-    .exists({ checkNull: true, checkFalsy: true })
-    .withMessage('Please provide a value for "lastName"'),
-  check('emailAddress')
-    .exists({ checkNull: true, checkFalsy: true })
-    .withMessage('Please provide a value for "email"'),
-  check('password')
-    .exists({checkNull: true, checkFalsy: true})
-    .withMessage('Please provide a password')   
-], async (req, res, next) => {
+router.post('/users', async (req, res, next) => {
     try {
-        const errors = validationResult(req);
+        const userPass = req.body;
+        userPass.password = bcryptjs.hashSync(userPass.password);
 
-        if (!errors.isEmpty()) {
-            const errorMessages = errors.array().map(error => error.msg);
-            return res.status(400).json({ errors: errorMessages });
-        }
-
-        const user = req.body;
-        user.password = bcryptjs.hashSync(user.password);
-
-        const User = await User.create({
+        await User.create({
             firstName: req.body.firstName,
             lastName: req.body.lastName,
             emailAddress: req.body.emailAddress,
@@ -135,7 +112,8 @@ router.post('/courses', async (req, res, next) => {
             title: req.body.title,
             description: req.body.description,
             estimatedTime: req.body.estimatedTime,
-            materialsNeeded: req.body.materialsNeeded
+            materialsNeeded: req.body.materialsNeeded,
+            userId: req.body.userId
         });
         res.json(course);
     } catch (error) {

@@ -3,18 +3,18 @@
 // load modules
 const express = require('express');
 const morgan = require('morgan');
-const db = require('./config/database')
+const sequelize = require('./models').sequelize;
 
 // variable to enable global error logging
 const enableGlobalErrorLogging = process.env.ENABLE_GLOBAL_ERROR_LOGGING === 'true';
 
 // Test Database
-db.authenticate()
+sequelize.authenticate()
 .then(console.log('database connected...'))
 .catch(err => console.log(`Error: ${err}`))
 
 // Sync Database    
-db.sync()
+sequelize.sync()
 .then(console.log('Syncing Database'))
 .catch(err => console.log(`Error: ${err}`))
 
