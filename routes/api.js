@@ -9,7 +9,7 @@ const authenticateUser = async (req, res, next) => {
     let message = null;
     const credentials = auth(req);
     if (credentials) {
-        const user = await User.findAll({
+        const user = await User.findOne({
             where: {
                 emailAddress: credentials.name
             }
@@ -48,8 +48,8 @@ router.get('/users', authenticateUser, (req, res) => {
     const user = req.currentUser;
 
     res.json({
-        name: user.name,
-        username: user.username
+        name: user.firstName,
+        username: user.emailAddress
     });
 });
 
