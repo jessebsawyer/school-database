@@ -11,10 +11,12 @@ const authenticateUser = async (req, res, next) => {
     const credentials = auth(req);
     if (credentials) {
         const user = await User.findOne({
+            attributes: {exclude: ['password', 'createdAt', 'updatedAt']},
             where: {
                 emailAddress: credentials.name
             }
         });
+        console.log(user);
         if (user) {
             const authenticated = bcryptjs
             .compareSync(credentials.pass, user.password);
@@ -47,49 +49,28 @@ const authenticateUser = async (req, res, next) => {
 // Show Authenticated User
 router.get('/users', authenticateUser, (req, res) => {
     const user = req.currentUser;
-    
-
     res.json(user);
 });
 
 // Create User
-router.post('/users', [
-    check('firstName')
-      .exists({ checkNull: true, checkFalsy: true })
-      .withMessage('Please provide a value for "firstName"'),
-    check('lastName')
-      .exists({ checkNull: true, checkFalsy: true })
-      .withMessage('Please provide a value for "lastName"'),
-    check('emailAddress')
-      .exists({ checkNull: true, checkFalsy: true })
-      .withMessage('Please provide a value for "emailAddress"'),
-    check('password')
-        .exists({checkNull: true, checkFalsy: true})
-        .withMessage('Please provide a value for "password"')  
-  ], async (req, res, next) => {
+router.post('/users', async (req, res, next) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            // Use the Array `map()` method to get a list of error messages.
-            const errorMessages = errors.array().map(error => error.msg);
-        
-            // Return the validation errors to the client.
-            return res.status(400).json({ errors: errorMessages });
-        } else {
-            const userPass = req.body;
-            userPass.password = bcryptjs.hashSync(userPass.password);
-    
+        const userPass = req.body;
+        userPass.password = bcryptjs.hashSync(userPass.password);
             await User.create({
                 firstName: req.body.firstName,
                 lastName: req.body.lastName,
                 emailAddress: req.body.emailAddress,
                 password: req.body.password
             });
-            return res.status(201).end();
-        }
+            res.status(201).end();
+            
     } catch (error) {
-        res.json({message: error.message})
-        next(error);
+        if (error.name === 'SequelizeUniqueConstraintError' || error.name === 'SequelizeValidationError') {
+            res.status(400).json({message: error.message});
+        } else {
+            next(error);
+        }
     }
 });
 
@@ -120,7 +101,9 @@ router.get('/courses', async (req, res, next) => {
 // Show Specified Course
 router.get('/courses/:id', async (req, res, next) => {
     try {
-        const course = await Course.findByPk(req.params.id);
+        const course = await Course.findByPk(req.params.id, {
+            attributes: { exclude: ['createdAt', 'updatedAt']}
+        });
         res.json(course);
     } catch (error) {
         res.json({message: error.message});
