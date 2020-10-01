@@ -1,9 +1,10 @@
 // Require Varibles
 const express = require('express');
 const router = express.Router();
-const { Course, User } = require('../models');
+const { Course, User, sequelize } = require('../models');
 const bcryptjs = require('bcryptjs');
 const auth = require('basic-auth');
+const { check, validationResult } = require('express-validator');
 
 const authenticateUser = async (req, res, next) => {
     let message = null;
@@ -54,18 +55,40 @@ router.get('/users', authenticateUser, (req, res) => {
 });
 
 // Create User
-router.post('/users', async (req, res, next) => {
+router.post('/users', [
+    check('firstName')
+      .exists({ checkNull: true, checkFalsy: true })
+      .withMessage('Please provide a value for "firstName"'),
+    check('lastName')
+      .exists({ checkNull: true, checkFalsy: true })
+      .withMessage('Please provide a value for "lastName"'),
+    check('emailAddress')
+      .exists({ checkNull: true, checkFalsy: true })
+      .withMessage('Please provide a value for "emailAddress"'),
+    check('password')
+        .exists({checkNull: true, checkFalsy: true})
+        .withMessage('Please provide a value for "password"')  
+  ], async (req, res, next) => {
     try {
-        const userPass = req.body;
-        userPass.password = bcryptjs.hashSync(userPass.password);
-
-        await User.create({
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            emailAddress: req.body.emailAddress,
-            password: req.body.password
-        });
-        return res.status(201).end();
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            // Use the Array `map()` method to get a list of error messages.
+            const errorMessages = errors.array().map(error => error.msg);
+        
+            // Return the validation errors to the client.
+            return res.status(400).json({ errors: errorMessages });
+        } else {
+            const userPass = req.body;
+            userPass.password = bcryptjs.hashSync(userPass.password);
+    
+            await User.create({
+                firstName: req.body.firstName,
+                lastName: req.body.lastName,
+                emailAddress: req.body.emailAddress,
+                password: req.body.password
+            });
+            return res.status(201).end();
+        }
     } catch (error) {
         res.json({message: error.message})
         next(error);
@@ -106,18 +129,23 @@ router.get('/courses/:id', async (req, res, next) => {
 })
 
 // Create Course
-router.post('/courses', async (req, res, next) => {
+router.post('/courses', authenticateUser, async (req, res, next) => {
     try {
-        const course = await Course.create({
+        const user = req.currentUser;
+        await Course.create({
             title: req.body.title,
             description: req.body.description,
             estimatedTime: req.body.estimatedTime,
             materialsNeeded: req.body.materialsNeeded,
-            userId: req.body.userId
+            userId: user.id
         });
-        res.json(course);
+        return res.status(201).end();
     } catch (error) {
-        res.json({message: error.message});
+        if (error.name === 'SequelizeValidationError') {
+            res.status(400).json({ errors: error.message });
+        } else {
+            next(error);
+        }
     }
 })
 
