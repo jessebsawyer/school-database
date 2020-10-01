@@ -150,26 +150,39 @@ router.post('/courses', authenticateUser, async (req, res, next) => {
 })
 
 // Update Course
-router.put('/courses/:id', async (req, res, next) => {
+router.put('/courses/:id', authenticateUser, async (req, res, next) => {
     let course;
+    const user = req.currentUser;
     try {
         course = await Course.findByPk(req.params.id);
-        course.update(req.body);
-        res.json(course);
+        if (user.id === course.userId) {
+            course.update(req.body);
+            res.json(course);
+        } else {
+            res.json({message: `${user.firstName} is not authorized to make changes.`});
+        }
     } catch (error) {
-        res.json({message: error.message});
-        next(error);
+        if (error.name === 'SequelizeValidationError') {
+            res.status(400).json({ errors: error.message });
+        } else {
+            next(error);
+        }
     }
 })
 
 // Delete Course
-router.delete('/courses/:id', async (req, res, next) => {
+router.delete('/courses/:id', authenticateUser, async (req, res, next) => {
+    const user = req.currentUser;
     try {
         const course = await Course.findByPk(req.params.id);
-        course.destroy();
-        res.redirect('/');
+        if (user.id === course.userId) {
+            course.destroy();
+            res.redirect('/');
+        } else {
+            res.status(400).json({message: `${user.firstName} is not authorized to make changes.`});
+        }
     } catch (error) {
-        res.json({message: error.message});
+        res.status(400).json({ errors: error.message });
         next(error);
     }
 })
