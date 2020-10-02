@@ -11,7 +11,6 @@ const authenticateUser = async (req, res, next) => {
     const credentials = auth(req);
     if (credentials) {
         const user = await User.findOne({
-            attributes: {exclude: ['password', 'createdAt', 'updatedAt']},
             where: {
                 emailAddress: credentials.name
             }
@@ -47,9 +46,19 @@ const authenticateUser = async (req, res, next) => {
 };
 
 // Show Authenticated User
-router.get('/users', authenticateUser, (req, res) => {
+router.get('/users', authenticateUser, async (req, res, next) => {
     const user = req.currentUser;
-    res.json(user);
+    try {
+        const authUser = await User.findOne({
+            attributes: {exclude: ["password", "createdAt", "updatedAt"]},
+            where: {
+                emailAddress: user.emailAddress
+            }
+        })
+        res.json(authUser);
+    } catch (error) {
+        next(error);
+    }
 });
 
 // Create User
