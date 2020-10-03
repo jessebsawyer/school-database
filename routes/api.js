@@ -72,10 +72,12 @@ router.post('/users', async (req, res, next) => {
                 emailAddress: req.body.emailAddress,
                 password: req.body.password
             });
-            res.status(201).end();
+            return res.status(201).end();
             
     } catch (error) {
-        if (error.name === 'SequelizeUniqueConstraintError' || error.name === 'SequelizeValidationError') {
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            res.status(400).json({message: error.message});
+        } else if (error.name === 'SequelizeValidationError'){
             res.status(400).json({message: error.message});
         } else {
             next(error);
@@ -98,7 +100,11 @@ router.delete('/users/:id/delete', (req, res, next) => {
 router.get('/courses', async (req, res, next) => {
     try {
         const course = await Course.findAll({
-            attributes: { exclude: ['createdAt', 'updatedAt']}
+            attributes: { exclude: ['createdAt', 'updatedAt']},
+            include: [{
+                model: User,
+                attributes: { exclude: ['password', 'createdAt', 'updatedAt']}
+            }]
         });
         res.json(course);
     } catch (error) {
@@ -111,7 +117,11 @@ router.get('/courses', async (req, res, next) => {
 router.get('/courses/:id', async (req, res, next) => {
     try {
         const course = await Course.findByPk(req.params.id, {
-            attributes: { exclude: ['createdAt', 'updatedAt']}
+            attributes: { exclude: ['createdAt', 'updatedAt']},
+            include: [{
+                model: User,
+                attributes: { exclude: ['password', 'createdAt', 'updatedAt']}
+            }]
         });
         res.json(course);
     } catch (error) {
