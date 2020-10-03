@@ -65,7 +65,9 @@ router.get('/users', authenticateUser, async (req, res, next) => {
 router.post('/users', async (req, res, next) => {
     try {
         const userPass = req.body;
-        userPass.password = bcryptjs.hashSync(userPass.password);
+        if (userPass.password) {
+            userPass.password = bcryptjs.hashSync(userPass.password);
+        }
             await User.create({
                 firstName: req.body.firstName,
                 lastName: req.body.lastName,
@@ -152,8 +154,26 @@ router.post('/courses', authenticateUser, async (req, res, next) => {
 })
 
 // Update Course
-router.put('/courses/:id', authenticateUser, async (req, res, next) => {
+router.put('/courses/:id', authenticateUser, [
+    check('title')
+      .exists({ checkNull: true, checkFalsy: true })
+      .withMessage('Please provide a value for "title"'),
+    check('description')
+      .exists({ checkNull: true, checkFalsy: true })
+      .withMessage('Please provide a value for "description"')
+  ], async (req, res, next) => {
+    const errors = validationResult(req);
+
+    // If there are validation errors...
+    if (!errors.isEmpty()) {
+      // Use the Array `map()` method to get a list of error messages.
+      const errorMessages = errors.array().map(error => error.msg);
+  
+      // Return the validation errors to the client.
+      return res.status(400).json({ errors: errorMessages });
+    }  
     let course;
+    let {title, description} = req.body;
     const user = req.currentUser;
     try {
         course = await Course.findByPk(req.params.id);
@@ -164,11 +184,7 @@ router.put('/courses/:id', authenticateUser, async (req, res, next) => {
             res.status(403).json({message: `${user.firstName} is not authorized to make changes.`});
         }
     } catch (error) {
-        if (error.name === 'SequelizeValidationError') {
-            res.status(400).json({ errors: error.message });
-        } else {
-            next(error);
-        }
+        next(error);
     }
 })
 
