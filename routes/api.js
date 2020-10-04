@@ -74,7 +74,7 @@ router.post('/users', async (req, res, next) => {
                 emailAddress: req.body.emailAddress,
                 password: req.body.password
             });
-            return res.status(201).end();
+        return res.redirect(201, '/').end();
             
     } catch (error) {
         if (error.name === 'SequelizeUniqueConstraintError') {
@@ -136,14 +136,14 @@ router.get('/courses/:id', async (req, res, next) => {
 router.post('/courses', authenticateUser, async (req, res, next) => {
     try {
         const user = req.currentUser;
-        await Course.create({
+        const course = await Course.create({
             title: req.body.title,
             description: req.body.description,
             estimatedTime: req.body.estimatedTime,
             materialsNeeded: req.body.materialsNeeded,
             userId: user.id
         });
-        return res.status(201).end();
+        return res.redirect(201, `/courses/${course.id}`).end();
     } catch (error) {
         if (error.name === 'SequelizeValidationError') {
             res.status(400).json({ errors: error.message });
