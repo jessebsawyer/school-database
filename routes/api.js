@@ -74,7 +74,7 @@ router.post('/users', async (req, res, next) => {
                 emailAddress: req.body.emailAddress,
                 password: req.body.password
             });
-        return res.redirect(201, '/').end();
+        return res.status(201).location('/').end()
             
     } catch (error) {
         if (error.name === 'SequelizeUniqueConstraintError') {
@@ -143,7 +143,7 @@ router.post('/courses', authenticateUser, async (req, res, next) => {
             materialsNeeded: req.body.materialsNeeded,
             userId: user.id
         });
-        return res.redirect(201, `/courses/${course.id}`).end();
+        return res.status(201).location(`/courses/${course.id}`).end()
     } catch (error) {
         if (error.name === 'SequelizeValidationError') {
             res.status(400).json({ errors: error.message });
