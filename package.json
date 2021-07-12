@@ -4,8 +4,8 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "start": "node ./app.js",
-    "server": "nodemon ./app.js",
+    "start": "node api/app",
+    "server": "nodemon api/app",
     "client": "npm start --prefix client",
     "dev": "concurrently \"npm run server\" \"npm run client\"", 
     "seed": "cross-env DB_ENABLE_LOGGING=true node './seed'"
