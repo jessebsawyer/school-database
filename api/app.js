@@ -4,25 +4,32 @@
 const express = require('express');
 const morgan = require('morgan');
 const sequelize = require('./models').sequelize;
+const cors = require('cors');
 
 // variable to enable global error logging
-const enableGlobalErrorLogging = process.env.ENABLE_GLOBAL_ERROR_LOGGING === 'true';
+const enableGlobalErrorLogging =
+  process.env.ENABLE_GLOBAL_ERROR_LOGGING === 'true';
 
 // Test Database
-sequelize.authenticate()
-.then(console.log('database connected...'))
-.catch(err => console.log(`Error: ${err}`))
+sequelize
+  .authenticate()
+  .then(console.log('database connected...'))
+  .catch((err) => console.log(`Error: ${err}`));
 
-// Sync Database    
-sequelize.sync()
-.then(console.log('Syncing Database'))
-.catch(err => console.log(`Error: ${err}`))
+// Sync Database
+sequelize
+  .sync()
+  .then(console.log('Syncing Database'))
+  .catch((err) => console.log(`Error: ${err}`));
 
 // Create the Express app
 const app = express();
 
 // Setup morgan which gives us http request logging
 app.use(morgan('dev'));
+
+// Cors Setup
+app.use(cors());
 
 // Allow Access to req.body
 app.use(express.json());
