@@ -30,5 +30,20 @@ export default (state, action) => {
       return {
         error: action.payload,
       };
+    case CREATE_USER_REQUEST:
+      return {
+        ...state,
+        loading: true,
+      };
+    case CREATE_USER_SUCCESS:
+      return {
+        ...state,
+        user: action.payload,
+        isAuthenticated: true,
+      };
+    case CREATE_USER_FAIL:
+      return {
+        error: action.payload,
+      };
   }
 };

@@ -30,7 +30,37 @@ const ContextState = (props) => {
 
   const [state, dispatch] = useReducer(contextReducer, initialState);
 
-  // Register User
+  // User Signup
+  const userSignup = async (user) => {
+    dispatch({
+      type: CREATE_USER_REQUEST,
+    });
+
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
+
+    try {
+      const { data } = axios.post('/api/users', user, config);
+
+      dispatch({
+        type: CREATE_USER_SUCCESS,
+        payload: data,
+      });
+
+      Cookies.set('user', JSON.stringify(data), { expires: 1 });
+    } catch (error) {
+      dispatch({
+        type: USER_LOGIN_FAIL,
+        payload:
+          error.response && error.response.data.message
+            ? error.response.data.message
+            : error.message,
+      });
+    }
+  };
 
   // User Login
   const userLogin = async (username, password) => {
@@ -83,6 +113,7 @@ const ContextState = (props) => {
         loading: state.loading,
         error: state.error,
         userLogin,
+        userSignup,
         userLogout,
       }}
     >

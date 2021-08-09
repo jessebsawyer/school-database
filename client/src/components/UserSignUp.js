@@ -1,19 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
+import Context from '../context/context';
 
 const UserSignUp = () => {
+  const userSignUpContext = useContext(Context);
+  const { userSignup, error } = userSignUpContext;
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  const submitHandler = (e) => {
+    e.preventDefault();
+    // Context call goes here...
+    userSignup(firstName, lastName, email, password);
+  };
+
   return (
     <div className='bounds'>
       <div className='grid-33 centered signin'>
         <h1>Sign Up</h1>
         <div>
-          <form>
+          <form onSubmit={submitHandler}>
+            {error && <h2>{error}</h2>}
             <div>
               <input
                 id='firstName'

@@ -6,8 +6,7 @@ const UserSignIn = (props) => {
   // Initialize Context
   const userSignInContext = useContext(Context);
 
-  const { user, isAuthenticated, userLogin, userLogout, error } =
-    userSignInContext;
+  const { isAuthenticated, userLogin, error } = userSignInContext;
 
   const [userName, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -26,7 +25,7 @@ const UserSignIn = (props) => {
     if (error) {
       console.log(error);
     }
-  }, [props.history, isAuthenticated]);
+  }, [props.history, isAuthenticated, error]);
 
   return (
     <div className='bounds'>
